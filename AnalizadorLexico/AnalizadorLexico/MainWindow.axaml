@@ -1,0 +1,46 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="AnalizadorLexico.MainWindow"
+        Title="AnalizadorLexico"
+        Width="800" Height="600">
+
+    <DockPanel>
+        
+        <!-- Barra de herramientas -->
+        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="5" >
+            <Button Content="Analizar" Width="100" Margin="0,0,10,0" Click="OnAnalyzeClick"/>
+            <Button Content="Subir Archivo" Width="120" Click="OnUploadClick"/>
+            <Button Name="CloseButton" Content="Cerrar" Width="80" Margin="10,0,0,0" Click="OnCloseClick"/>
+        </StackPanel>
+        
+        <!-- Editor principal -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="40"/> <!-- Números de línea -->
+                <ColumnDefinition Width="*"/> <!-- Editor -->
+            </Grid.ColumnDefinitions>
+
+            <!-- Números de línea -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <TextBlock Name="LineNumbers"
+                           FontFamily="Consolas"
+                           FontSize="14"
+                           Margin="5"/>
+            </ScrollViewer>
+    
+            <!-- Editor de texto -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                <TextBox Name="Editor"
+                         AcceptsReturn="True"
+                         FontFamily="Consolas"
+                         FontSize="14"
+                         Margin="5"
+                         TextWrapping="Wrap"/>
+            </ScrollViewer>
+
+        </Grid>
+    </DockPanel>
+</Window>
