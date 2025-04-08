@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using System;
+using AnalizadorLexico.util;
 using Avalonia;
 
 namespace AnalizadorLexico
@@ -40,8 +41,12 @@ namespace AnalizadorLexico
         // Método para manejar el click del botón "Subir Archivo"
         private void OnUploadClick(object sender, RoutedEventArgs e)
         {
-            // Aquí puedes implementar la lógica para subir un archivo
-            Console.WriteLine("Subiendo archivo...");
+            //Obtener el texto
+            string text = this.Editor.Text;
+            
+            // Enviamos el texto al automata
+            AFDCompleto afd = new AFDCompleto();
+            string resultado = afd.procesarCadena(text);
         }
 
         // Método para manejar el click del botón "Cerrar"
@@ -51,31 +56,5 @@ namespace AnalizadorLexico
             this.Close();
         }
 
-    }
-    
-    // Implementación de IObserver<string>
-    public class TextObserver : IObserver<string>
-    {
-        private readonly MainWindow _window;
-
-        public TextObserver(MainWindow window)
-        {
-            _window = window;
-        }
-
-        public void OnNext(string value)
-        {
-            _window.UpdateLineNumbers(value);
-        }
-
-        public void OnError(Exception error)
-        {
-            // Manejar errores si es necesario
-        }
-
-        public void OnCompleted()
-        {
-            // Opcional: manejar la finalización de la observación
-        }
     }
 }

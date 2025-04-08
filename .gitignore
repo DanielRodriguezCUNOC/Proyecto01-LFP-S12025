@@ -1,0 +1,23 @@
+# Binarios y builds
+bin/
+obj/
+
+# Archivos de publicacion
+publish/
+
+# Archivos de usuario
+.idea/
+*.userprefs
+
+# Dependencias
+packages/
+
+# Archivos temporales
+*.swp
+*.cache
+
+# Ejecutables
+*.exe
+*.dll
+*.pdb
+*.xml
