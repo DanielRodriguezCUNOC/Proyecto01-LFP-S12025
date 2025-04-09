@@ -21,7 +21,7 @@ public class AFDCompleto
     private readonly AFDComentarioLinea afdComentarioLinea = new AFDComentarioLinea();
     private readonly AFDComentarioBloque afdComentarioBloque = new AFDComentarioBloque();
 
-    public List<TokenInfo> AnalizarTexto(string texto)
+public List<TokenInfo> AnalizarTexto(string texto)
 {
     var tokens = new List<TokenInfo>();
     int fila = 1;
@@ -65,13 +65,40 @@ public class AFDCompleto
             inicioColumna = columna;
             automataActual = SeleccionarAutomata(c, i, texto);
 
-            if (automataActual != null)
+            if (automataActual is AFDComentarioBloque)
             {
-                automataActual.Procesar(c);
-                lexemaActual = c.ToString();
-                
-                // Verificación temprana para identificadores
-                if (automataActual is AFDIdentificador && automataActual.EsValido())
+                afdComentarioBloque.SetPosicionInicio(fila, columna);
+            }
+
+            if (automataActual is AFDComentarioLinea)
+            {
+                afdComentarioLinea.SetPosicionInicio(fila, columna);
+            }
+
+            if (automataActual == null)
+            {
+                columna++;
+                continue;
+            }
+
+            lexemaActual = c.ToString();
+            automataActual.Procesar(c);
+            columna++;
+            continue;
+        }
+
+        // Procesar con el autómata actual
+        automataActual.Procesar(c);
+        lexemaActual += c;
+
+        // Manejo especial para identificadores
+        if (automataActual is AFDIdentificador)
+        {
+            bool esFinIdentificador = (i + 1 >= texto.Length) || !EsCaracterIdentificador(texto[i + 1]);
+            
+            if (esFinIdentificador)
+            {
+                if (automataActual.EsValido())
                 {
                     tokens.Add(new TokenInfo
                     {
@@ -80,17 +107,14 @@ public class AFDCompleto
                         Fila = inicioFila,
                         Columna = inicioColumna
                     });
-                    automataActual = null;
-                    lexemaActual = "";
                 }
+                automataActual = null;
+                lexemaActual = "";
+                inicioColumna = columna + 1;
             }
             columna++;
             continue;
         }
-
-        // Procesar con el autómata actual
-        automataActual.Procesar(c);
-        lexemaActual += c;
 
         // Comentario de bloque
         if (automataActual is AFDComentarioBloque bloque)
@@ -116,7 +140,7 @@ public class AFDCompleto
             continue;
         }
 
-        // Verificación para todos los demás autómatas
+        // Para todos los demás autómatas
         if (automataActual.EsValido())
         {
             tokens.Add(new TokenInfo
@@ -140,7 +164,7 @@ public class AFDCompleto
         columna++;
     }
 
-    // Verificar si hay un token pendiente al final
+    // Capturar último token si quedó pendiente
     if (automataActual != null && automataActual.EsValido())
     {
         tokens.Add(new TokenInfo
@@ -172,6 +196,11 @@ public class AFDCompleto
         if (c == '/' && i + 1 < texto.Length && texto[i + 1] == '*') return afdComentarioBloque;
 
         return null;
+    }
+    
+    private bool EsCaracterIdentificador(char c)
+    {
+        return char.IsLetterOrDigit(c) || c == '_' || c == '-';
     }
 
     private bool EsDigito(char c)
