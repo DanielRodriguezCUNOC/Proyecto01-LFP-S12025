@@ -11,9 +11,11 @@ public class TextObserver : IObserver<string>
         _window = window;
     }
 
-    public void OnNext(string value)
+    public void OnNext(string? value)
     {
-        _window.UpdateLineNumbers(value);
+        _window.UpdateLineNumbers(value ?? "");
+        //Marca que hubo cambios
+        _window.HasUnsavedChanges = true; 
     }
 
     public void OnError(Exception error)

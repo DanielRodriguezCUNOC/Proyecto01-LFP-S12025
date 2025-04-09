@@ -15,6 +15,9 @@
             <Button Content="Subir Archivo" Width="120" Click="OnUploadClick"/>
             <Button Name="CloseButton" Content="Cerrar" Width="80" Margin="10,0,0,0" Click="OnCloseClick"/>
             <Button Content="Guardar" Width="100" Margin="10,0,0,0" Click="OnSaveClick"/>
+            <Button Content="Guardar como" Width="120" Margin="10,0,0,0" Click="OnSaveAsClick"/>
+            <Button Content="Nuevo" Width="100" Margin="0,0,10,0" Click="OnNewClick"/>
+
 
         </StackPanel>
         
@@ -31,6 +34,13 @@
                      TextWrapping="Wrap"
                      VerticalAlignment="Top" />
         </ScrollViewer>
-     
+        <TextBlock x:Name="TextBlockReporte"
+                   Margin="10"
+                   VerticalAlignment="Bottom"
+                   HorizontalAlignment="Stretch"
+                   FontSize="12" 
+                   TextWrapping="Wrap"
+                   Foreground="Black"
+                   MaxHeight="200" />
     </DockPanel>
 </Window>

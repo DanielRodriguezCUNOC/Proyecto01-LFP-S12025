@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "eWcH8LAcU3A=",
+  "dgSpecHash": "CZY5Fyce8JY=",
   "success": true,
   "projectFilePath": "/home/luluwalilith/Documents/Universidad 2025/LFP/Proyecto 1/Proyecto01-LFP-S12025/AnalizadorLexico/AnalizadorLexico/AnalizadorLexico.csproj",
   "expectedPackageFiles": [
@@ -13,6 +13,7 @@
     "/home/luluwalilith/.nuget/packages/avalonia.diagnostics/11.2.6/avalonia.diagnostics.11.2.6.nupkg.sha512",
     "/home/luluwalilith/.nuget/packages/avalonia.fonts.inter/11.2.6/avalonia.fonts.inter.11.2.6.nupkg.sha512",
     "/home/luluwalilith/.nuget/packages/avalonia.freedesktop/11.2.6/avalonia.freedesktop.11.2.6.nupkg.sha512",
+    "/home/luluwalilith/.nuget/packages/avalonia.htmlrenderer/11.0.0/avalonia.htmlrenderer.11.0.0.nupkg.sha512",
     "/home/luluwalilith/.nuget/packages/avalonia.native/11.2.6/avalonia.native.11.2.6.nupkg.sha512",
     "/home/luluwalilith/.nuget/packages/avalonia.remote.protocol/11.2.6/avalonia.remote.protocol.11.2.6.nupkg.sha512",
     "/home/luluwalilith/.nuget/packages/avalonia.skia/11.2.6/avalonia.skia.11.2.6.nupkg.sha512",

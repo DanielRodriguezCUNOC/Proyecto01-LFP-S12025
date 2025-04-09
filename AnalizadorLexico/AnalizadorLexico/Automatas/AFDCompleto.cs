@@ -1,10 +1,13 @@
+using System;
 using System.Collections.Generic;
 using AnalizadorLexico.util;
+using Avalonia.Threading;
 
 namespace AnalizadorLexico;
 
 public class AFDCompleto
 {
+    public event Action<List<TokenInfo>> ReporteTokensGenerado;
     private readonly AFDNumerico afdNumerico = new AFDNumerico();
     private readonly AFDIdentificador afdIdentificador = new AFDIdentificador();
     private readonly AFDPalabraReservada afdPalabraReservada = new AFDPalabraReservada();
@@ -19,121 +22,139 @@ public class AFDCompleto
     private readonly AFDComentarioBloque afdComentarioBloque = new AFDComentarioBloque();
 
     public List<TokenInfo> AnalizarTexto(string texto)
+{
+    var tokens = new List<TokenInfo>();
+    int fila = 1;
+    int columna = 1;
+    int inicioColumna = 1;
+    int inicioFila = 1;
+    string lexemaActual = "";
+    IAutomata automataActual = null;
+
+    for (int i = 0; i < texto.Length; i++)
     {
-        var tokens = new List<TokenInfo>();
-        int fila = 1;
-        int columna = 1;
-        int inicioColumna = 1;
-        int inicioFila = 1;
-        string lexemaActual = "";
-        IAutomata automataActual = null;
+        char c = texto[i];
 
-        for (int i = 0; i < texto.Length; i++)
+        if (c == '\n')
         {
-            char c = texto[i];
+            fila++;
+            columna = 1;
+            inicioColumna = 1;
 
-            if (c == '\n')
+            if (automataActual is AFDComentarioLinea && automataActual.EsValido())
             {
-                fila++;
-                columna = 1;
-                inicioColumna = 1;
-
-                if (automataActual is AFDComentarioLinea && automataActual.EsValido())
-                {
-                    tokens.Add(afdComentarioLinea.GetTokenInfo());
-                    automataActual = null;
-                    lexemaActual = "";
-                }
-                continue;
-            }
-
-            // Ignorar espacios en blanco fuera de un automata
-            if (char.IsWhiteSpace(c) && automataActual == null)
-            {
-                columna++;
-                continue;
-            }
-
-            if (automataActual is AFDOperadorRelacional opRel && opRel.EsperarOperadorCompuesto()) continue;
-            if (automataActual is AFDOperadorLogico opLog && opLog.EstaProcesandoTexto()) continue;
-
-            if (automataActual == null)
-            {
-                inicioFila = fila;
-                inicioColumna = columna;
-                automataActual = SeleccionarAutomata(c, i, texto);
-
-                if (automataActual is AFDComentarioBloque)
-                {
-                    afdComentarioBloque.SetPosicionInicio(fila, columna);
-                }
-
-                if (automataActual is AFDComentarioLinea)
-                {
-                    afdComentarioLinea.SetPosicionInicio(fila, columna);
-                }
-
-                if (automataActual == null)
-                {
-                    columna++;
-                    continue;
-                }
-
-                lexemaActual = c.ToString();
-            }
-            else
-            {
-                lexemaActual += c;
-            }
-
-            // Comentario de bloque
-            if (automataActual is AFDComentarioBloque bloque)
-            {
-                if (bloque.EsValido())
-                {
-                    tokens.Add(bloque.GetTokenInfo());
-                    automataActual = null;
-                    lexemaActual = "";
-                }
-                else if (bloque.TieneError())
-                {
-                    automataActual = null;
-                    lexemaActual = "";
-                }
-                continue;
-            }
-
-            automataActual.Procesar(c);
-
-            if (automataActual is AFDComentarioLinea) continue;
-
-            if (automataActual.EsValido())
-            {
-                tokens.Add(new TokenInfo
-                {
-                    Tipo = automataActual.TipoToken,
-                    Lexema = lexemaActual,
-                    Fila = inicioFila,
-                    Columna = inicioColumna
-                });
-
+                tokens.Add(afdComentarioLinea.GetTokenInfo());
                 automataActual = null;
                 lexemaActual = "";
-                inicioColumna = columna + 1;
             }
-            else if (automataActual.TieneError())
-            {
-                automataActual = null;
-                lexemaActual = "";
-                inicioColumna = columna + 1;
-            }
-
-            columna++;
+            continue;
         }
 
-        return tokens;
+        if (char.IsWhiteSpace(c) && automataActual == null)
+        {
+            columna++;
+            continue;
+        }
+
+        if (automataActual is AFDOperadorRelacional opRel && opRel.EsperarOperadorCompuesto()) continue;
+        if (automataActual is AFDOperadorLogico opLog && opLog.EstaProcesandoTexto()) continue;
+
+        if (automataActual == null)
+        {
+            inicioFila = fila;
+            inicioColumna = columna;
+            automataActual = SeleccionarAutomata(c, i, texto);
+
+            if (automataActual != null)
+            {
+                automataActual.Procesar(c);
+                lexemaActual = c.ToString();
+                
+                // Verificación temprana para identificadores
+                if (automataActual is AFDIdentificador && automataActual.EsValido())
+                {
+                    tokens.Add(new TokenInfo
+                    {
+                        Tipo = automataActual.TipoToken,
+                        Lexema = lexemaActual,
+                        Fila = inicioFila,
+                        Columna = inicioColumna
+                    });
+                    automataActual = null;
+                    lexemaActual = "";
+                }
+            }
+            columna++;
+            continue;
+        }
+
+        // Procesar con el autómata actual
+        automataActual.Procesar(c);
+        lexemaActual += c;
+
+        // Comentario de bloque
+        if (automataActual is AFDComentarioBloque bloque)
+        {
+            if (bloque.EsValido())
+            {
+                tokens.Add(bloque.GetTokenInfo());
+                automataActual = null;
+                lexemaActual = "";
+            }
+            else if (bloque.TieneError())
+            {
+                automataActual = null;
+                lexemaActual = "";
+            }
+            columna++;
+            continue;
+        }
+
+        if (automataActual is AFDComentarioLinea)
+        {
+            columna++;
+            continue;
+        }
+
+        // Verificación para todos los demás autómatas
+        if (automataActual.EsValido())
+        {
+            tokens.Add(new TokenInfo
+            {
+                Tipo = automataActual.TipoToken,
+                Lexema = lexemaActual,
+                Fila = inicioFila,
+                Columna = inicioColumna
+            });
+            automataActual = null;
+            lexemaActual = "";
+            inicioColumna = columna + 1;
+        }
+        else if (automataActual.TieneError())
+        {
+            automataActual = null;
+            lexemaActual = "";
+            inicioColumna = columna + 1;
+        }
+
+        columna++;
     }
 
+    // Verificar si hay un token pendiente al final
+    if (automataActual != null && automataActual.EsValido())
+    {
+        tokens.Add(new TokenInfo
+        {
+            Tipo = automataActual.TipoToken,
+            Lexema = lexemaActual,
+            Fila = inicioFila,
+            Columna = inicioColumna
+        });
+    }
+
+    ReporteTokensGenerado?.Invoke(tokens);
+    return tokens;
+}
     private IAutomata SeleccionarAutomata(char c, int i, string texto)
     {
         if (c == '$') return afdIdentificador;
@@ -148,7 +169,6 @@ public class AFDCompleto
         if (EsSignoAgrupacion(c)) return afdSignoAgrupacion;
         if (c == '#') return afdComentarioLinea;
 
-        // Comentario de bloque
         if (c == '/' && i + 1 < texto.Length && texto[i + 1] == '*') return afdComentarioBloque;
 
         return null;

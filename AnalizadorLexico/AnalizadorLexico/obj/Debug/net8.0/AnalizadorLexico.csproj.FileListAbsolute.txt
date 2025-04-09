@@ -66,6 +66,4 @@
 /home/luluwalilith/Documents/Universidad 2025/LFP/Proyecto 1/Proyecto01-LFP-S12025/AnalizadorLexico/AnalizadorLexico/obj/Debug/net8.0/Analizad.46841CA4.Up2Date
 /home/luluwalilith/Documents/Universidad 2025/LFP/Proyecto 1/Proyecto01-LFP-S12025/AnalizadorLexico/AnalizadorLexico/obj/Debug/net8.0/AnalizadorLexico.genruntimeconfig.cache
 /home/luluwalilith/Documents/Universidad 2025/LFP/Proyecto 1/Proyecto01-LFP-S12025/AnalizadorLexico/AnalizadorLexico/obj/Debug/net8.0/ref/AnalizadorLexico.dll
-/home/luluwalilith/Documents/Universidad 2025/LFP/Proyecto 1/Proyecto01-LFP-S12025/AnalizadorLexico/AnalizadorLexico/obj/Debug/net8.0/AnalizadorLexico.dll
-/home/luluwalilith/Documents/Universidad 2025/LFP/Proyecto 1/Proyecto01-LFP-S12025/AnalizadorLexico/AnalizadorLexico/obj/Debug/net8.0/refint/AnalizadorLexico.dll
-/home/luluwalilith/Documents/Universidad 2025/LFP/Proyecto 1/Proyecto01-LFP-S12025/AnalizadorLexico/AnalizadorLexico/obj/Debug/net8.0/AnalizadorLexico.pdb
+/home/luluwalilith/Documents/Universidad 2025/LFP/Proyecto 1/Proyecto01-LFP-S12025/AnalizadorLexico/AnalizadorLexico/bin/Debug/net8.0/Avalonia.HtmlRenderer.dll
