@@ -46,7 +46,7 @@ namespace AnalizadorLexico
             
             // Enviamos el texto al automata
             AFDCompleto afd = new AFDCompleto();
-            string resultado = afd.procesarCadena(text);
+            afd.AnalizarTexto(text);
         }
 
         // Método para manejar el click del botón "Cerrar"

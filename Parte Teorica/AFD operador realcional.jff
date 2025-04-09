@@ -10,10 +10,12 @@
 		<state id="1" name="B">
 			<x>294.0</x>
 			<y>117.0</y>
+			<final/>
 		</state>
 		<state id="2" name="C">
 			<x>298.0</x>
 			<y>309.0</y>
+			<final/>
 		</state>
 		<state id="3" name="D">
 			<x>473.0</x>
@@ -22,7 +24,7 @@
 		</state>
 		<!--The list of transitions.-->
 		<transition>
-			<from>2</from>
+			<from>1</from>
 			<to>3</to>
 			<read>=</read>
 		</transition>
@@ -32,14 +34,14 @@
 			<read>&lt;</read>
 		</transition>
 		<transition>
+			<from>2</from>
+			<to>3</to>
+			<read>=</read>
+		</transition>
+		<transition>
 			<from>0</from>
 			<to>2</to>
 			<read>&gt;</read>
-		</transition>
-		<transition>
-			<from>1</from>
-			<to>3</to>
-			<read>=</read>
 		</transition>
 	</automaton>
 </structure>

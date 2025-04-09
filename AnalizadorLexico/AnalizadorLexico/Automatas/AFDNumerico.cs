@@ -1,6 +1,8 @@
+using AnalizadorLexico.util;
+
 namespace AnalizadorLexico;
 
-public class AFDNumerico
+public class AFDNumerico : IAutomata 
 {
     private enum Estado
     {
@@ -19,7 +21,7 @@ public class AFDNumerico
     public bool esEnteroValido => estado == Estado.Entero && !esDecimal;
     public bool esDecimalValido => estado == Estado.Decimal;
     public bool esDigito (char c) => c >= '0' && c <= '9'; 
-    public bool tieneError => estado == Estado.Error;
+    public bool tieneError ;
     
     // Metodos de procesamiento
 
@@ -104,22 +106,62 @@ public class AFDNumerico
         }
     }
 
-    public string obtenerResultado()
+    public bool EsValido()
     {
-        if (tieneError)
-            return $"{cadenaEvaluada} -> Formato no valido";
-        else if (esDecimalValido)
-            return $"{cadenaEvaluada} -> Decimal valido";
-        else if (esEnteroValido)
-            return $"{cadenaEvaluada} -> Entero valido";
+        if (esDecimalValido || esEnteroValido)
+        {
+            return true;
+        }
         else
-            return $"{cadenaEvaluada} -> Formato no valido";
+        {
+            return false;
+        }
+        
     }
-    
-    public void reiniciar()
+
+    public bool TieneError() => estado == Estado.Error;
+
+    public void Reiniciar()
     {
         estado = Estado.Inicio;
         cadenaEvaluada = "";
         esDecimal = false;
     }
+
+    public string TipoToken { get; }
+
+    public string obtenerResultado()
+    {
+        if (tieneError)
+            return $"{cadenaEvaluada} → Formato numérico inválido";
+        
+        string resultado = cadenaEvaluada;
+        
+        // Eliminar ceros no significativos solo si es un número válido
+        if (esEnteroValido || esDecimalValido)
+        {
+            // Dividir en partes si es decimal
+            string[] partes = resultado.Split('.');
+            bool esNegativo = partes[0].StartsWith("-");
+            
+            // Procesar parte entera
+            //Eliminar el signo
+            string parteEntera = partes[0].TrimStart('-', '+');
+            // Eliminar ceros no significativos
+            parteEntera = parteEntera.TrimStart('0');
+            parteEntera = parteEntera == "" ? "0" : parteEntera; // Evitar cadena vacía si es 000 o 000.0
+            parteEntera = (esNegativo ? "-" : "") + parteEntera;
+            
+            // Reconstruir el número
+            resultado = partes.Length > 1 ? $"{parteEntera}.{partes[1]}" : parteEntera;
+        }
+
+        if (esDecimalValido)
+            return $"{resultado} → Decimal válido (original: {cadenaEvaluada})";
+        else if (esEnteroValido)
+            return $"{resultado} → Entero válido (original: {cadenaEvaluada})";
+        else
+            return $"{cadenaEvaluada} → Entrada incompleta";
+    }
+    
 }
