@@ -12,6 +12,11 @@ public class AFDCompleto
     private readonly AFDSignoPuntuacion afdSignoPuntuacion = new AFDSignoPuntuacion();
     private readonly AFDOperadorAritmetico afdOperadorAritmetico = new AFDOperadorAritmetico();
     private readonly AFDOperadorRelacional afdOperadorRelacional = new AFDOperadorRelacional();
+    private readonly AFDOperadorLogico afdOperadorLogico = new AFDOperadorLogico();
+    private readonly AFDOperadorAsignacion afdOperadorAsignacion = new AFDOperadorAsignacion();
+    private readonly AFDSignoAgrupacion afdSignoAgrupacion = new AFDSignoAgrupacion();
+    private readonly AFDComentarioLinea afdComentarioLinea = new AFDComentarioLinea();
+    private readonly AFDComentarioBloque afdComentarioBloque = new AFDComentarioBloque();
 
     public List<TokenInfo> AnalizarTexto(string texto)
     {
@@ -27,52 +32,97 @@ public class AFDCompleto
         {
             char c = texto[i];
 
-            // Manejo de saltos de línea
             if (c == '\n')
             {
                 fila++;
                 columna = 1;
-                continue;
-            }
-            
-           // Manejo de operadores relacionales
-            if (automataActual is AFDOperadorRelacional opRel && opRel.EsperarOperadorCompuesto())
-            {
-                // Esperar el siguiente carácter para ver si es '='
+                inicioColumna = 1;
+
+                if (automataActual is AFDComentarioLinea && automataActual.EsValido())
+                {
+                    tokens.Add(afdComentarioLinea.GetTokenInfo());
+                    automataActual = null;
+                    lexemaActual = "";
+                }
                 continue;
             }
 
-            // Determinar qué autómata usar basado en el primer carácter
+            // Ignorar espacios en blanco fuera de un automata
+            if (char.IsWhiteSpace(c) && automataActual == null)
+            {
+                columna++;
+                continue;
+            }
+
+            if (automataActual is AFDOperadorRelacional opRel && opRel.EsperarOperadorCompuesto()) continue;
+            if (automataActual is AFDOperadorLogico opLog && opLog.EstaProcesandoTexto()) continue;
+
             if (automataActual == null)
             {
-                automataActual = SeleccionarAutomata(c, ref inicioFila, ref inicioColumna);
-                if (automataActual == null) // Carácter no reconocido
+                inicioFila = fila;
+                inicioColumna = columna;
+                automataActual = SeleccionarAutomata(c, i, texto);
+
+                if (automataActual is AFDComentarioBloque)
+                {
+                    afdComentarioBloque.SetPosicionInicio(fila, columna);
+                }
+
+                if (automataActual is AFDComentarioLinea)
+                {
+                    afdComentarioLinea.SetPosicionInicio(fila, columna);
+                }
+
+                if (automataActual == null)
                 {
                     columna++;
                     continue;
                 }
+
+                lexemaActual = c.ToString();
+            }
+            else
+            {
+                lexemaActual += c;
             }
 
-            // Procesar el carácter en el autómata seleccionado
-            automataActual.Procesar(c);
-            lexemaActual += c;
+            // Comentario de bloque
+            if (automataActual is AFDComentarioBloque bloque)
+            {
+                if (bloque.EsValido())
+                {
+                    tokens.Add(bloque.GetTokenInfo());
+                    automataActual = null;
+                    lexemaActual = "";
+                }
+                else if (bloque.TieneError())
+                {
+                    automataActual = null;
+                    lexemaActual = "";
+                }
+                continue;
+            }
 
-            // Verificar si se completó un token
+            automataActual.Procesar(c);
+
+            if (automataActual is AFDComentarioLinea) continue;
+
             if (automataActual.EsValido())
             {
-                tokens.Add(new TokenInfo {
+                tokens.Add(new TokenInfo
+                {
                     Tipo = automataActual.TipoToken,
                     Lexema = lexemaActual,
                     Fila = inicioFila,
                     Columna = inicioColumna
                 });
+
                 automataActual = null;
                 lexemaActual = "";
                 inicioColumna = columna + 1;
             }
             else if (automataActual.TieneError())
             {
-                // Manejar error
                 automataActual = null;
                 lexemaActual = "";
                 inicioColumna = columna + 1;
@@ -84,16 +134,70 @@ public class AFDCompleto
         return tokens;
     }
 
-    private IAutomata SeleccionarAutomata(char c, ref int fila, ref int columna)
+    private IAutomata SeleccionarAutomata(char c, int i, string texto)
     {
         if (c == '$') return afdIdentificador;
-        if (char.IsDigit(c)) return afdNumerico;
+        if (EsDigito(c)) return afdNumerico;
         if (c == '"' || c == '\'') return afdLiteral;
-        if (".,;:".IndexOf(c) >= 0) return afdSignoPuntuacion;
-        if ("^*/+-".IndexOf(c) >= 0) return afdOperadorAritmetico; 
-        if (char.IsLetter(c)) return afdPalabraReservada;
+        if (EsSignoPuntuacion(c)) return afdSignoPuntuacion;
+        if (EsOperadorAritmetico(c)) return afdOperadorAritmetico;
+        if (EsLetra(c)) return afdPalabraReservada;
         if (c == '>' || c == '<') return afdOperadorRelacional;
-        
-        return null; // Carácter no reconocido (espacios, operadores, etc.)
+        if (c == '&' || c == '|' || ToLower(c) == 'a' || ToLower(c) == 'o') return afdOperadorLogico;
+        if (c == '=') return afdOperadorAsignacion;
+        if (EsSignoAgrupacion(c)) return afdSignoAgrupacion;
+        if (c == '#') return afdComentarioLinea;
+
+        // Comentario de bloque
+        if (c == '/' && i + 1 < texto.Length && texto[i + 1] == '*') return afdComentarioBloque;
+
+        return null;
+    }
+
+    private bool EsDigito(char c)
+    {
+        return c >= '0' && c <= '9';
+    }
+
+    private bool EsLetra(char c)
+    {
+        return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+    }
+
+    private bool EsSignoPuntuacion(char c)
+    {
+        char[] signos = { '.', ',', ';', ':' };
+        for (int i = 0; i < signos.Length; i++)
+        {
+            if (c == signos[i]) return true;
+        }
+        return false;
+    }
+
+    private bool EsOperadorAritmetico(char c)
+    {
+        char[] ops = { '^', '*', '/', '+', '-' };
+        for (int i = 0; i < ops.Length; i++)
+        {
+            if (c == ops[i]) return true;
+        }
+        return false;
+    }
+
+    private bool EsSignoAgrupacion(char c)
+    {
+        char[] signos = { '(', ')', '[', ']', '{', '}' };
+        for (int i = 0; i < signos.Length; i++)
+        {
+            if (c == signos[i]) return true;
+        }
+        return false;
+    }
+
+    private char ToLower(char c)
+    {
+        if (c >= 'A' && c <= 'Z')
+            return (char)(c + 32);
+        return c;
     }
 }

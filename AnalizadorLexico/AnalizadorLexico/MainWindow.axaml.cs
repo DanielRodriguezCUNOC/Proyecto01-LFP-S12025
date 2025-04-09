@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using System;
+using System.Collections.Generic;
 using AnalizadorLexico.util;
 using Avalonia;
 
@@ -9,8 +10,8 @@ namespace AnalizadorLexico
 {
     public partial class MainWindow : Window
     {
-        //private TextBox Editor;
-        //private TextBlock LineNumbers;
+        private string? currentFilePath = null;
+
 
         public MainWindow()
         {
@@ -39,14 +40,99 @@ namespace AnalizadorLexico
         }
 
         // Método para manejar el click del botón "Subir Archivo"
-        private void OnUploadClick(object sender, RoutedEventArgs e)
+        private async void OnUploadClick(object sender, RoutedEventArgs e)
         {
-            //Obtener el texto
-            string text = this.Editor.Text;
-            
-            // Enviamos el texto al automata
-            AFDCompleto afd = new AFDCompleto();
-            afd.AnalizarTexto(text);
+            // Si hay texto ya en el editor, preguntar si quiere sobrescribirlo
+            if (!string.IsNullOrEmpty(Editor.Text))
+            {
+                var confirmDialog = await MessageBox.Show(this,
+                    "Hay cambios en el editor. ¿Deseas guardar antes de abrir otro archivo?",
+                    "Confirmar");
+
+                if (confirmDialog == MessageBox.MessageBoxResult.Cancel)
+                    return; // Cancelar acción
+
+                if (confirmDialog == MessageBox.MessageBoxResult.Yes)
+                {
+                    // Aquí puedes agregar lógica para guardar el archivo actual
+                    // Ejemplo: await GuardarArchivo(Editor.Text);
+                }
+            }
+
+            // Mostrar diálogo para seleccionar archivo
+            var openFileDialog = new OpenFileDialog
+            {
+                AllowMultiple = false,
+                Title = "Selecciona un archivo de texto",
+                Filters = new List<FileDialogFilter>
+                {
+                    new FileDialogFilter { Name = "Archivos de texto", Extensions = { "txt" } }
+                }
+            };
+
+            string[]? result = await openFileDialog.ShowAsync(this);
+
+            if (result != null && result.Length > 0)
+            {
+                string path = result[0];
+                string fileContent = await System.IO.File.ReadAllTextAsync(path);
+
+                Editor.Text = fileContent;
+                UpdateLineNumbers(fileContent);
+                currentFilePath = path;
+            }
+        }
+
+        
+        private async void OnSaveClick(object sender, RoutedEventArgs e)
+        {
+            string content = Editor.Text;
+
+            if (!string.IsNullOrEmpty(currentFilePath))
+            {
+                // Guardar directamente en el archivo actual
+                await System.IO.File.WriteAllTextAsync(currentFilePath, content);
+            }
+            else
+            {
+                // Mostrar diálogo para guardar archivo nuevo
+                var saveFileDialog = new SaveFileDialog
+                {
+                    Title = "Guardar como...",
+                    Filters = new List<FileDialogFilter>
+                    {
+                        new FileDialogFilter { Name = "Archivos de texto", Extensions = { "txt" } }
+                    }
+                };
+
+                string? result = await saveFileDialog.ShowAsync(this);
+
+                if (!string.IsNullOrEmpty(result))
+                {
+                    await System.IO.File.WriteAllTextAsync(result, content);
+                    currentFilePath = result; // guardar ruta nueva
+                }
+            }
+        }
+        
+        public async void OnSaveAsClick(object sender, RoutedEventArgs e)
+        {
+            var saveFileDialog = new SaveFileDialog
+            {
+                Title = "Guardar como...",
+                Filters = new List<FileDialogFilter>
+                {
+                    new FileDialogFilter { Name = "Archivos de texto", Extensions = { "txt" } }
+                }
+            };
+
+            string? path = await saveFileDialog.ShowAsync(this);
+
+            if (!string.IsNullOrEmpty(path))
+            {
+                await System.IO.File.WriteAllTextAsync(path, Editor.Text);
+                currentFilePath = path; // actualiza el archivo actual a este nuevo
+            }
         }
 
         // Método para manejar el click del botón "Cerrar"

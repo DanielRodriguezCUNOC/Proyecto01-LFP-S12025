@@ -14,6 +14,8 @@
             <Button Content="Analizar" Width="100" Margin="0,0,10,0" Click="OnAnalyzeClick"/>
             <Button Content="Subir Archivo" Width="120" Click="OnUploadClick"/>
             <Button Name="CloseButton" Content="Cerrar" Width="80" Margin="10,0,0,0" Click="OnCloseClick"/>
+            <Button Content="Guardar" Width="100" Margin="10,0,0,0" Click="OnSaveClick"/>
+
         </StackPanel>
         
         <!-- Numeros de linea -->
